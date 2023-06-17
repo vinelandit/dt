@@ -1,0 +1,3 @@
+[submodule "phones/web/dtws"]
+	path = phones/web/dtws
+	url = https://github.com/vinelandit/dtws.git
