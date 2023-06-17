@@ -1,0 +1,48 @@
+{
+  "name": "imp",
+  "version": "0.0.1",
+  "description": "IMP by Ray Interactive",
+  "productName": "imp",
+  "author": "Sam Healy <samhealy@yahoo.com>",
+  "private": true,
+  "scripts": {
+    "lint": "eslint --ext .js,.vue ./",
+    "format": "prettier --write \"**/*.{js,vue,scss,html,md,json}\" --ignore-path .gitignore",
+    "test": "echo \"No test specified\" && exit 0"
+  },
+  "dependencies": {
+    "@quasar/extras": "^1.16.4",
+    "@quasar/fastclick": "^1.1.5",
+    "axios": "^0.21.1",
+    "easymidi": "^2.1.0",
+    "fastclick": "^1.0.6",
+    "node-static": "^0.7.11",
+    "nosleep.js": "^0.12.0",
+    "pinia": "^2.0.11",
+    "quasar": "^2.6.0",
+    "tiny-emitter": "^2.1.0",
+    "vue": "^3.0.0",
+    "vue-fastclick": "^1.0.4",
+    "vue-router": "^4.0.0",
+    "vue-simple-websocket": "^1.0.0",
+    "vue3-slider": "^1.6.9",
+    "ws": "^8.5.0"
+  },
+  "devDependencies": {
+    "@quasar/app-vite": "^1.0.0-alpha.0",
+    "autoprefixer": "^10.4.2",
+    "eslint": "^8.10.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-plugin-vue": "^8.5.0",
+    "prettier": "^2.5.1"
+  },
+  "engines": {
+    "node": "^18 || ^16 || ^14.19",
+    "npm": ">= 6.13.4",
+    "yarn": ">= 1.21.1"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.6",
+    "utf-8-validate": "^5.0.9"
+  }
+}
