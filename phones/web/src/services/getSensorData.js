@@ -22,10 +22,6 @@ const sensorData = {
         return uDateTimeStamp;
     },
 
-    isCA: function() {
-        
-    },
-
     tilt: null,
     alphaRel: null,
     alphaOffset: null,
@@ -38,8 +34,19 @@ const sensorData = {
     lastBeta: -10000,
     lastGamma: -10000,
 
-    lastTilt: 0,
-    lastPan: 0,
+
+
+    state: {
+        alpha: null,
+        beta: null,
+        gamma: null,
+        accelX: 0,
+        accelY: 0,
+        accelZ: 0,
+        btn: null
+    },
+
+    lastSend: 0,
 
     frequency: 0.01 * 1000, // milliseconds
 
@@ -61,10 +68,18 @@ const sensorData = {
             console.log('starting dummy stream');
             // create dummy stream for desktop test clients
             window.setInterval(function() {
-                _this.panPhone({
+                _this.orientationHandler({
                     alpha: Math.random() * 5,
                     beta: Math.random() * 5,
                     gamma: Math.random() * 5
+                });
+
+                _this.motionHandler({
+                    acceleration: {
+                        x: Math.random() * 3,
+                        y: Math.random() * 3,
+                        z: Math.random() * 3,
+                    }
                 });
             }, 16);
         }
@@ -85,7 +100,7 @@ const sensorData = {
                     
                     console.log('device orientation permission granted');
                     
-                    window.addEventListener('deviceorientation', _this.panPhone.bind(_this), false);
+                    window.addEventListener('deviceorientation', _this.orientationHandler.bind(_this), false);
                     
 
                 } else {
@@ -102,7 +117,7 @@ const sensorData = {
 
             console.log('permissions absent');
             if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', _this.panPhone.bind(_this), false);
+                window.addEventListener('deviceorientation', _this.orientationHandler.bind(_this), false);
                 
             } else {
                 // none available; continue anyway.
@@ -123,7 +138,7 @@ const sensorData = {
                     
                     console.log('device motion permission granted');
                     
-                    window.addEventListener('devicemotion', _this.tiltPhone.bind(_this), false);
+                    window.addEventListener('devicemotion', _this.motionHandler.bind(_this), false);
                     
                 } else {
                     console.log('not granted');
@@ -137,7 +152,7 @@ const sensorData = {
         } else {
             console.log('permissions absent');
             if (window.DeviceMotionEvent) {
-                window.addEventListener('devicemotion', _this.tiltPhone.bind(_this), false);
+                window.addEventListener('devicemotion', _this.motionHandler.bind(_this), false);
                 
             } else {
                 // None available; continue anyway
@@ -148,29 +163,36 @@ const sensorData = {
     
     },
 
+    sendIfReady: function() {
+        const t = Date.now();
+        if(t - this.lastSend > this.frequency) {
+            this.state.btn = impStore.btn;
+
+            this.ws.wsm( this.state );
+            this.lastSend = t;
+
+            impStore.newData();
+        }
+    },
         
-    tiltPhone: function(event) {
+    motionHandler: function(event) {
         
         
         if(this.isCA) {
-            this.tilt = -event.accelerationIncludingGravity.z;
-        } else {
-            this.tilt = event.accelerationIncludingGravity.z;
-        }
+            event.acceleration.z = -event.acceleration.z;
+        } 
 
-        const t = Date.now();
-        if(t - this.lastTilt > this.frequency) {
-
-            this.lastTilt = t;
-        }
+        this.state.accelX = event.acceleration.x.toFixed(3);
+        this.state.accelY = event.acceleration.y.toFixed(3);
+        this.state.accelZ = event.acceleration.z.toFixed(3);
         
+        this.sendIfReady();
         
     },
  
 
-    panPhone: function(event) {
+    orientationHandler: function(event) {
 
-        console.log(event);
 
         var _this = this;
         const t = Date.now();
@@ -204,31 +226,25 @@ const sensorData = {
         _this.gammaRel = (gamma - _this.gammaOffset);
         */
 
-        if(t - this.lastPan > this.frequency) {
+        
+        
+       
+
+        /* if(Math.abs(this.lastAlpha - this.alphaRel) > 0.01 || Math.abs(this.lastBeta - this.betaRel) > 0.01 || Math.abs(this.lastGamma - this.gammaRel) > 0.01) {
             
+            this.lastAlpha = _this.alphaRel;
+            this.lastBeta = _this.betaRel;
+            this.lastGamma = _this.gammaRel;
+            this.ws.wsm({ alpha: this.alphaRel.toFixed(2), beta: this.betaRel.toFixed(2), gamma: this.gammaRel.toFixed(2), btn: impStore.btn });
+        } */
+        this.state.alpha = alpha.toFixed(3);
+        this.state.beta = beta.toFixed(3);
+        this.state.gamma = gamma.toFixed(3);
             
-            const interval = t - this.lastPan;
-            this.lastPan = t;
 
-
-            /* if(Math.abs(this.lastAlpha - this.alphaRel) > 0.01 || Math.abs(this.lastBeta - this.betaRel) > 0.01 || Math.abs(this.lastGamma - this.gammaRel) > 0.01) {
-                
-                this.lastAlpha = _this.alphaRel;
-                this.lastBeta = _this.betaRel;
-                this.lastGamma = _this.gammaRel;
-                this.ws.wsm({ alpha: this.alphaRel.toFixed(2), beta: this.betaRel.toFixed(2), gamma: this.gammaRel.toFixed(2), btn: impStore.btn });
-            } */
-            if(Math.abs(this.lastAlpha - alpha) > 0.01 || Math.abs(this.lastBeta - beta) > 0.01 || Math.abs(this.lastGamma - gamma) > 0.01) {
-                
-                this.lastAlpha = alpha;
-                this.lastBeta = beta;
-                this.lastGamma = gamma;
-                this.ws.wsm({ alpha: alpha.toFixed(2), beta: beta.toFixed(2), gamma: gamma.toFixed(2), btn: impStore.btn });
-
-                impStore.newData();
-
-            }
-        }
+        this.sendIfReady();
+            
+        
 
     }
 
