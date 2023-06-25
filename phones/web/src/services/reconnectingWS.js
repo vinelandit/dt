@@ -246,6 +246,8 @@ const ReconnectingWebSocket = function(url, protocols, options) {
             if (forcedClose) {
                 self.readyState = WebSocket.CLOSED;
                 eventTarget.dispatchEvent(generateEvent('close'));
+
+                impStore.status = 'Closed';
             } else {
                 self.readyState = WebSocket.CONNECTING;
                 var e = generateEvent('connecting');

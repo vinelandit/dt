@@ -1,7 +1,9 @@
-
 import { ReconnectingWebSocket } from './reconnectingWS'
 import { useImpStore } from '../stores/imp-store'
 const impStore = useImpStore()
+
+import { useRoute } from 'vue-router'
+
 
 const WS = {
 
@@ -10,6 +12,8 @@ const WS = {
   url: location.host.indexOf('imp-') > -1 ? 'wss://'+location.host.split(':')[0]+':443' : 'wss://dtws.herokuapp.com',
 
   connect: function() {
+
+
     if(!this.socket || this.socket.readyState>1) {
       
       console.log('WS connecting')
@@ -35,13 +39,12 @@ const WS = {
       }
 
       this.socket.onmessage = (event) => {
-        console.log(event.data);
-        event = JSON.parse(event.data);
-        if(this.handlers[event.command]) {
-          this.handlers[event.command](event.payload,_this);
-        } else {
-          console.log('unrecognised command',event)
+        // console.log(event.data)
+        event = JSON.parse(event.data)
+        if(event.command == 'SIGTERM_ET_ALL') {
+          impStore.done = true
         }
+        
       }
     }
     

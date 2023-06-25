@@ -1,6 +1,6 @@
 <template>
   <div class="outer">
-    <div class="signal" :style="{ opacity: Math.abs(Math.sin(impStore.activeStream)) }"></div>{{ impStore.activeStream }}
+    <div class="signal" :style="{ opacity: Math.abs(Math.sin(impStore.streamPhase)) }"></div>
    
       <div class="button">
       </div>
@@ -16,8 +16,8 @@
 
 import WS from '../services/ws'
 import { useImpStore } from '../stores/imp-store.js'
-import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
+import { useRouter, useRoute } from 'vue-router'
 import { watch, defineComponent } from 'vue'
 
 
@@ -34,12 +34,26 @@ export default defineComponent({
 
     const impStore = useImpStore()
     
-    const r = useRoute().query
+    const r = useRouter()
+    const rq = useRoute().query
     const $q = useQuasar()
+
+    const exit = function() {
+      
+      $q.cookies.set('already_played', 1)
+      WS.socket.close()
+      r.replace('/thanks')
+      
+    }
+
+    // watch for exit call
+    watch(() => impStore.isDone, function() {
+      exit()
+    })
 
     const allowAccess = function() {
       $q.dialog({
-        title: 'Welcome to The Remyxtory',
+        title: 'Welcome to Remyxtory',
         message: 'Please tap OK and allow sensor access to begin!',
         cancel: true,
         persistent: true
@@ -49,7 +63,7 @@ export default defineComponent({
 
       }).onCancel(() => {
         // console.log('>>>> Cancel')
-        location.href="thanks.html"
+        exit()
       }).onDismiss(() => {
         // console.log('I am triggered on both OK and Cancel')
       })
@@ -77,7 +91,7 @@ export default defineComponent({
     }
 
     document.addEventListener('touchstart', function(e) {
-      if(e.target.classList.contains('button')) {
+      if(e.target.classList.contains('button') && impStore.streamActive) {
         btnState(1)
       }
     })
@@ -88,14 +102,13 @@ export default defineComponent({
     
 
     console.log(r)
-    if(!r.pid || !r.phash || 5 + r.pid * 7611 != r.phash) {
-      console.log('error handling here')
-      impStore.pid = 1;
-      impStore.phash = 7616;
+    if(!rq.pid || !rq.phash || 5 + rq.pid * 7611 != rq.phash) {
+      location.href = "error.html"
+      return false
     } else {
 
-      impStore.pid = r.pid;
-      impStore.phash = r.phash;
+      impStore.pid = rq.pid
+      impStore.phash = rq.phash
     }
 
     if($q.cookies.has('already_played')) {
@@ -117,12 +130,9 @@ export default defineComponent({
       WS.wsm({ btn: impStore.btn });
       
     }
-    const exit = function() {
-      $q.cookies.set('already_played', 1)
-      location.href = "thanks.html"
-    }
     
-    return { confirmReplay, r, exit, impStore, requestSensorData, btnState }
+    
+    return { confirmReplay, exit, r, impStore, requestSensorData, btnState }
   }
 })
 

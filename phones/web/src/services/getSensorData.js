@@ -1,6 +1,8 @@
 'use strict';
 import { useImpStore } from '../stores/imp-store'
+
 const impStore = useImpStore()
+
 const sensorData = {
 
     isMobile: function() {
